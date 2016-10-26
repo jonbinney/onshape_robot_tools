@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+from apikey.client import Client
+import argparse
+
+parser = argparse.ArgumentParser(description='Create a robot from an onshape assembly')
+parser.add_argument('document_id', help='onshape document id')
+parser.add_argument('workspace_id', help='onshape workspace id for version to use')
+parser.add_argument('element_id', help='onshape element id for assembly tab')
+args = parser.parse_args()
+
+print('document_id: {}'.format(args.document_id))
+print('workspace_id: {}'.format(args.workspace_id))
+print('element_id: {}'.format(args.element_id))
+
+
+document_id = 'b1fbad2b8cc23e2018792b44'
+workspace_id = '216e5be51e7f4b1fa9cb2cd2'
+element_id = 'ea7858121ba56bc710856259'
+
+c = Client('https://cad.onshape.com', logging=True)
+
+query = {'includeMateFeatures': 'true'}
+assembly = c._api.request('get', '/api/assemblies/d/{}/w/{}/e/{}'.format(
+    args.document_id,
+    args.workspace_id,
+    args.element_id), query)
+
+root_assembly = assembly.json()['rootAssembly']
+
+occurrences_dict = {}
+occurrences = root_assembly['occurrences']
+for occurrence in occurrences:
+    path = occurrence['path']
+    print path
+    occurrences_dict[path[0]] = occurrence
+
+print('Instances')
+instances_id_dict = {}
+instances_name_dict = {}
+instances = root_assembly['instances']
+for instance in instances:
+    print('    {}'.format(instance['name']))
+    instances_id_dict[instance['id']] = instance
+    instances_name_dict[instance['name']] = instance
+
+print('Mates')
+for feature in root_assembly['features']:
+    if feature['featureType'] != 'mate':
+        continue
+
+    feature_data = feature['featureData']
+    print('    {}'.format(feature_data['name']))
+    print('        id: {}'.format(feature['id']))
+    print('        type: {}'.format(feature_data['mateType']))
+
+    for mated_entity in feature_data['matedEntities']:
+        print('        Entity')
+        for mated_occurence in mated_entity['matedOccurrence']:
+            try:
+                part_name = instances_id_dict[mated_occurence]['name']
+            except KeyError:
+                part_name = None
+
+            print('            {}'.format(part_name))
+
+def get_world_transform_for_link(link_name):
+    link_instance = instances_name_dict[link_name]
+    link_id = link_instance['id']
+    link_occurrence = occurrences_dict[link_id]
+    return np.reshape(np.array(link_occurrence['transform']), (4, 4))
+
+def print_urdf_origin(H):
+    roll, pitch, yaw = trans.euler_from_matrix(H)
+    x, y, z = trans.translation_from_matrix(H)
+    print('<origin xyz="{} {} {}" rpy="{} {} {}"/>'.format(
+        x, y, z, roll, pitch, yaw))
+
