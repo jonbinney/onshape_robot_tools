@@ -4,13 +4,6 @@ Robot tools for use with the Onshape CAD program.
 
 # Installation
 
-Download the onshape apikey library and setup a virtualenv as described here: https://github.com/onshape-public/apikey/tree/master/python
-
-Too make that work on ubuntu 16.04, I first had to run:
-```
-sudo apt-get install libncurses5
-```
-
 This package uses the `requests` library.
 
 ```
