@@ -3,6 +3,58 @@ import argparse
 
 from onshape_client import OnshapeClient
 
+class Assembly:
+    def __init__(self, assembly_dict):
+        """
+        Answers questions about an assembly.
+
+        assembly_dict: Dictionary created from response to onshape's assembly definition query.
+        """
+        self.assembly_dict = assembly_dict
+
+        self.occurrences_dict = {}
+        occurrences = assembly_dict['occurrences']
+        for occurrence in occurrences:
+            path = tuple(occurrence['path'])
+            self.occurrences_dict[path] = occurrence
+
+        self.instances_id_dict = {}
+        self.instances_name_dict = {}
+        instances = assembly_dict['instances']
+        for instance in instances:
+            self.instances_id_dict[instance['id']] = instance
+            self.instances_name_dict[instance['name']] = instance
+
+        self.mates_dict = {}
+        for feature in assembly_dict['features']:
+            if feature['featureType'] != 'mate':
+                continue
+            feature_data = feature['featureData']
+            self.mates_dict[feature['id']
+            if feature_data['mateType'] != 'FASTENED':
+                print feature
+                die
+            for mated_entity in feature_data['matedEntities']:
+                mated_occurence = tuple(mated_entity['matedOccurrence'])
+                try:
+                    part_name = self.instances_id_dict[mated_occurence[0]]['name']
+                except KeyError:
+                    part_name = None
+
+    def print_instances(self):
+        print(self.assembly_dict['instances'][0])
+        for instance in sorted(self.assembly_dict['instances']):
+            print('{} : {}'.format(instance['name'], instance['id']))
+
+    def print_occurences(self):
+        print(self.assembly_dict['occurrences'][0])
+
+    def print_mates(self):
+        pass
+
+    def get_part_children(self, part_name):
+        pass
+
 parser = argparse.ArgumentParser(description='Create a robot from an onshape assembly')
 parser.add_argument('document_id', help='onshape document id')
 parser.add_argument('workspace_id', help='onshape workspace id for version to use')
@@ -22,47 +74,12 @@ request_path = '/api/assemblies/d/{}/w/{}/e/{}'.format(
     args.workspace_id,
     args.element_id)
 query_dict = {'includeMateFeatures': 'true'}
-assembly = client.make_request('GET', request_path, query_dict).json()
-print assembly.keys()
+assembly_definition = client.make_request('GET', request_path, query_dict).json()
 
-root_assembly = assembly['rootAssembly']
+root_assembly = Assembly(assembly_definition['rootAssembly'])
+root_assembly.print_instances()
+root_assembly.print_occurences()
 
-occurrences_dict = {}
-occurrences = root_assembly['occurrences']
-for occurrence in occurrences:
-    path = tuple(occurrence['path'])
-    print path
-    occurrences_dict[path] = occurrence
-
-print('Instances')
-instances_id_dict = {}
-instances_name_dict = {}
-instances = root_assembly['instances']
-for instance in instances:
-    print('    {}'.format(instance['name']))
-    instances_id_dict[instance['id']] = instance
-    instances_name_dict[instance['name']] = instance
-
-print('Mates')
-mates_dict = {}
-for feature in root_assembly['features']:
-    if feature['featureType'] != 'mate':
-        continue
-
-    feature_data = feature['featureData']
-    print('    {}'.format(feature_data['name']))
-    print('        id: {}'.format(feature['id']))
-    print('        type: {}'.format(feature_data['mateType']))
-
-    for mated_entity in feature_data['matedEntities']:
-        print('        Entity')
-        mated_occurence = tuple(mated_entity['matedOccurrence'])
-        try:
-            part_name = instances_id_dict[mated_occurence[0]]['name']
-        except KeyError:
-            part_name = None
-
-        print('            {}'.format(part_name))
 
 def get_world_transform_for_link(link_name):
     link_instance = instances_name_dict[link_name]
