@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import argparse
 
-from onshape_client import OnshapeClient
+from onshape_robot_tools.onshape_client import OnshapeClient
 
 class Assembly:
     def __init__(self, assembly_dict):
@@ -30,10 +30,6 @@ class Assembly:
             if feature['featureType'] != 'mate':
                 continue
             feature_data = feature['featureData']
-            self.mates_dict[feature['id']
-            if feature_data['mateType'] != 'FASTENED':
-                print feature
-                die
             for mated_entity in feature_data['matedEntities']:
                 mated_occurence = tuple(mated_entity['matedOccurrence'])
                 try:

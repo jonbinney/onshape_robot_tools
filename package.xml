@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package>
+  <name>onshape_robot_tools</name>
+  <version>0.0.0</version>
+  <description>Tools to help build ROS robots using Onshape CAD</description>
+
+  <maintainer email="jon.binney@gmail.com">Jon Binney</maintainer>
+
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>rospy</run_depend>
+</package>
